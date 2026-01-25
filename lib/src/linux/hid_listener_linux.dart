@@ -37,64 +37,63 @@ class LinuxHidListenerBackend extends HidListenerBackend {
   void _keyboardProc(dynamic e) {
     final eventAddr = ffi.Pointer<bindings.LinuxKeyboardEvent>.fromAddress(e);
 
-    final pressed =
-        eventAddr.ref.eventType == bindings.LinuxKeyboardEventType.LKE_KeyDown
-            ? 0xffffffff
-            : 0x0;
+    final isDown =
+        eventAddr.ref.eventType == bindings.LinuxKeyboardEventType.LKE_KeyDown;
+    final pressed = isDown ? 0xffffffff : 0x0;
 
+    // Use GtkKeyHelper to get the logical key, same as the old RawKeyEventDataLinux did
     final keyHelper = GtkKeyHelper();
-    final firstEventData = RawKeyEventDataLinux(
+    final tempEventData = RawKeyEventDataLinux(
         keyHelper: keyHelper,
         unicodeScalarValues: eventAddr.ref.unicodeScalarValues,
         scanCode: eventAddr.ref.scanCode,
         keyCode: eventAddr.ref.keyCode,
-        isDown: pressed == 0xffffffff,
+        isDown: isDown,
         modifiers: 0);
 
-    if (firstEventData.logicalKey == LogicalKeyboardKey.capsLock) {
+    final logicalKey = tempEventData.logicalKey;
+    final physicalKey = tempEventData.physicalKey;
+
+    if (logicalKey == LogicalKeyboardKey.capsLock) {
       _capslockEnabled = ~_capslockEnabled;
     }
 
-    if (firstEventData.logicalKey == LogicalKeyboardKey.altLeft ||
-        firstEventData.logicalKey == LogicalKeyboardKey.altRight) {
+    if (logicalKey == LogicalKeyboardKey.altLeft ||
+        logicalKey == LogicalKeyboardKey.altRight) {
       _altPressed = pressed;
     }
 
-    if (firstEventData.logicalKey == LogicalKeyboardKey.controlLeft ||
-        firstEventData.logicalKey == LogicalKeyboardKey.controlRight) {
+    if (logicalKey == LogicalKeyboardKey.controlLeft ||
+        logicalKey == LogicalKeyboardKey.controlRight) {
       _controlPressed = pressed;
     }
 
-    if (firstEventData.logicalKey == LogicalKeyboardKey.metaLeft ||
-        firstEventData.logicalKey == LogicalKeyboardKey.metaRight) {
+    if (logicalKey == LogicalKeyboardKey.metaLeft ||
+        logicalKey == LogicalKeyboardKey.metaRight) {
       _metaPressed = pressed;
     }
 
-    if (firstEventData.logicalKey == LogicalKeyboardKey.shiftLeft ||
-        firstEventData.logicalKey == LogicalKeyboardKey.shiftRight) {
+    if (logicalKey == LogicalKeyboardKey.shiftLeft ||
+        logicalKey == LogicalKeyboardKey.shiftRight) {
       _shiftPressed = pressed;
     }
 
-    final modifiers = (GtkKeyHelper.modifierCapsLock & _capslockEnabled) |
-        (GtkKeyHelper.modifierMod1 & _altPressed) |
-        (GtkKeyHelper.modifierControl & _controlPressed) |
-        (GtkKeyHelper.modifierMeta & _metaPressed) |
-        (GtkKeyHelper.modifierShift & _shiftPressed);
+    // Create the new KeyEvent
+    final KeyEvent event;
+    final timeStamp = Duration(microseconds: DateTime.now().microsecondsSinceEpoch);
 
-    final eventData = RawKeyEventDataLinux(
-        keyHelper: keyHelper,
-        unicodeScalarValues: eventAddr.ref.unicodeScalarValues,
-        scanCode: eventAddr.ref.scanCode,
-        keyCode: eventAddr.ref.keyCode,
-        isDown: pressed == 0xffffffff,
-        modifiers: modifiers);
-
-    final RawKeyEvent event;
-
-    if (pressed == 0xffffffff) {
-      event = RawKeyDownEvent(data: eventData);
+    if (isDown) {
+      event = KeyDownEvent(
+        physicalKey: physicalKey,
+        logicalKey: logicalKey,
+        timeStamp: timeStamp,
+      );
     } else {
-      event = RawKeyUpEvent(data: eventData);
+      event = KeyUpEvent(
+        physicalKey: physicalKey,
+        logicalKey: logicalKey,
+        timeStamp: timeStamp,
+      );
     }
 
     for (final listener in keyboardListeners.values) {

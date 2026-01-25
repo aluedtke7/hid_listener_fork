@@ -198,7 +198,14 @@ FLUTTER_PLUGIN_EXPORT void InitializeDartAPI(void* data) {
 }
 
 FLUTTER_PLUGIN_EXPORT bool InitializeListeners() {
-    return true;
+    try {
+        if(HidListener::Get() == nullptr) {
+            new HidListener();
+        }
+        return true;
+    } catch (const std::exception& e) {
+        return false;
+    }
 }
 
 }

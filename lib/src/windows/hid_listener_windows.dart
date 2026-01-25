@@ -39,29 +39,11 @@ class WindowsHidListenerBackend extends HidListenerBackend {
         ffi.Pointer<bindings.WindowsKeyboardEvent>.fromAddress(event);
 
     final vkCode = eventAddr.ref.vkCode;
-    final pressed =
-        eventAddr.ref.eventType == bindings.WindowsKeyboardEventType.WKE_KeyDown
-            ? 0xffffffff
-            : 0x0;
+    final isDown =
+        eventAddr.ref.eventType == bindings.WindowsKeyboardEventType.WKE_KeyDown;
+    final pressed = isDown ? 0xffffffff : 0x0;
 
-    final physicalKey = kWindowsToPhysicalKey[vkCode];
-
-    if (physicalKey == PhysicalKeyboardKey.altLeft) _lAltPressed = pressed;
-    if (physicalKey == PhysicalKeyboardKey.altRight) _rAltPressed = pressed;
-
-    if (physicalKey == PhysicalKeyboardKey.controlLeft) {
-      _lControlPressed = pressed;
-    }
-    if (physicalKey == PhysicalKeyboardKey.controlRight) {
-      _rControlPressed = pressed;
-    }
-
-    if (physicalKey == PhysicalKeyboardKey.metaLeft) _lMetaPressed = pressed;
-    if (physicalKey == PhysicalKeyboardKey.metaRight) _rMetaPressed = pressed;
-
-    if (physicalKey == PhysicalKeyboardKey.shiftLeft) _lShiftPressed = pressed;
-    if (physicalKey == PhysicalKeyboardKey.shiftRight) _rShiftPressed = pressed;
-
+    // Use RawKeyEventDataWindows to get physical and logical keys
     final altModifiers =
         (RawKeyEventDataWindows.modifierAlt & (_lAltPressed | _rAltPressed)) |
             (RawKeyEventDataWindows.modifierLeftAlt & _lAltPressed) |
@@ -79,7 +61,7 @@ class WindowsHidListenerBackend extends HidListenerBackend {
     final shiftModifiers = (RawKeyEventDataWindows.modifierShift &
             (_lShiftPressed | _rShiftPressed)) |
         (RawKeyEventDataWindows.modifierLeftShift & _lShiftPressed) |
-        (RawKeyEventDataWindows.modifierRightShift);
+        (RawKeyEventDataWindows.modifierRightShift & _rShiftPressed);
 
     final modifiers =
         altModifiers | controlModifiers | metaModifiers | shiftModifiers;
@@ -89,16 +71,45 @@ class WindowsHidListenerBackend extends HidListenerBackend {
         scanCode: eventAddr.ref.scanCode,
         modifiers: modifiers);
 
-    final RawKeyEvent rawEvent;
+    final physicalKey = eventData.physicalKey;
+    final logicalKey = eventData.logicalKey;
 
-    if (pressed == 0xffffffff) {
-      rawEvent = RawKeyDownEvent(data: eventData);
+    if (physicalKey == PhysicalKeyboardKey.altLeft) _lAltPressed = pressed;
+    if (physicalKey == PhysicalKeyboardKey.altRight) _rAltPressed = pressed;
+
+    if (physicalKey == PhysicalKeyboardKey.controlLeft) {
+      _lControlPressed = pressed;
+    }
+    if (physicalKey == PhysicalKeyboardKey.controlRight) {
+      _rControlPressed = pressed;
+    }
+
+    if (physicalKey == PhysicalKeyboardKey.metaLeft) _lMetaPressed = pressed;
+    if (physicalKey == PhysicalKeyboardKey.metaRight) _rMetaPressed = pressed;
+
+    if (physicalKey == PhysicalKeyboardKey.shiftLeft) _lShiftPressed = pressed;
+    if (physicalKey == PhysicalKeyboardKey.shiftRight) _rShiftPressed = pressed;
+
+    // Create the new KeyEvent
+    final KeyEvent keyEvent;
+    final timeStamp = Duration(microseconds: DateTime.now().microsecondsSinceEpoch);
+
+    if (isDown) {
+      keyEvent = KeyDownEvent(
+        physicalKey: physicalKey,
+        logicalKey: logicalKey,
+        timeStamp: timeStamp,
+      );
     } else {
-      rawEvent = RawKeyUpEvent(data: eventData);
+      keyEvent = KeyUpEvent(
+        physicalKey: physicalKey,
+        logicalKey: logicalKey,
+        timeStamp: timeStamp,
+      );
     }
 
     for (final listener in keyboardListeners.values) {
-      listener(rawEvent);
+      listener(keyEvent);
     }
   }
 

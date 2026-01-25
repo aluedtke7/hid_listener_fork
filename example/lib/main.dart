@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hid_listener/hid_listener.dart';
 
-void listener(RawKeyEvent event) {
+void listener(KeyEvent event) {
   print(
-      "${event is RawKeyDownEvent} ${event.logicalKey.debugName} ${event.isShiftPressed} ${event.isAltPressed} ${event.isControlPressed}");
+      "${event is KeyDownEvent} ${event.logicalKey.debugName} ${event.physicalKey.debugName}");
 }
 
 void mouseListener(MouseEvent event) {

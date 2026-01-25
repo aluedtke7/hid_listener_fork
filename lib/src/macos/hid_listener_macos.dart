@@ -50,6 +50,7 @@ class MacOsHidListenerBackend extends HidListenerBackend {
     final event =
         bindings.MacOsKeyboardEvent.castFromPointer(_bindings, eventAddr.value);
 
+    // Get RawKeyEventData to extract physical and logical keys
     final RawKeyEventData eventData;
     if (!event.isMedia) {
       eventData = _nonMediaKeyboardProc(event);
@@ -59,16 +60,29 @@ class MacOsHidListenerBackend extends HidListenerBackend {
       eventData = data;
     }
 
-    final RawKeyEvent rawKeyEvent;
+    final logicalKey = eventData.logicalKey;
+    final physicalKey = eventData.physicalKey;
+
+    final KeyEvent keyEvent;
+    final timeStamp = Duration(microseconds: DateTime.now().microsecondsSinceEpoch);
+
     if (event.eventType ==
         bindings.MacOsKeyboardEventType.MacOsKeyboardEventTypeKeyDown) {
-      rawKeyEvent = RawKeyDownEvent(data: eventData);
+      keyEvent = KeyDownEvent(
+        physicalKey: physicalKey,
+        logicalKey: logicalKey,
+        timeStamp: timeStamp,
+      );
     } else {
-      rawKeyEvent = RawKeyUpEvent(data: eventData);
+      keyEvent = KeyUpEvent(
+        physicalKey: physicalKey,
+        logicalKey: logicalKey,
+        timeStamp: timeStamp,
+      );
     }
 
     for (final listener in keyboardListeners.values) {
-      listener(rawKeyEvent);
+      listener(keyEvent);
     }
   }
 

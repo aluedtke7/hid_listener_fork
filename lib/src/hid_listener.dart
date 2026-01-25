@@ -34,7 +34,7 @@ final ffi.DynamicLibrary _dylib = () {
 }();
 
 abstract class HidListenerBackend {
-  int? addKeyboardListener(void Function(RawKeyEvent) listener) {
+  int? addKeyboardListener(void Function(KeyEvent) listener) {
     if (!_keyboardRegistered) {
       if (!registerKeyboard()) return null;
       _keyboardRegistered = true;
@@ -67,7 +67,7 @@ abstract class HidListenerBackend {
   bool registerMouse();
 
   @protected
-  HashMap<int, void Function(RawKeyEvent)> keyboardListeners =
+  HashMap<int, void Function(KeyEvent)> keyboardListeners =
       HashMap.identity();
   @protected
   HashMap<int, void Function(MouseEvent)> mouseListeners = HashMap.identity();
