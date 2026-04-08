@@ -9,7 +9,6 @@
 
 #include <dart-sdk/include/dart_native_api.h>
 #include <dart-sdk/include/dart_api_dl.h>
-#include <dart-sdk/include/dart_api_dl.c>
 
 #include <stdexcept>
 #include <string>
