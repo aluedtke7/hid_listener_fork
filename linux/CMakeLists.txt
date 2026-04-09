@@ -25,6 +25,9 @@ add_library(${PLUGIN_NAME} SHARED
 
 set_target_properties(${PLUGIN_NAME} PROPERTIES OUTPUT_NAME "hid_listener")
 
+# Ensure position-independent code for dynamic linking
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 apply_standard_settings(${PLUGIN_NAME})
 
 # Symbols are hidden by default to reduce the chance of accidental conflicts
