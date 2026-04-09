@@ -1,9 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-#include "dart-sdk/include/dart_native_api.h"
-#include "dart-sdk/include/dart_api_dl.h"
-
 #ifdef _MSC_VER
 #define PLUGIN_DLLEXPORT __declspec(dllexport)
 #define PLUGIN_DLLIMPORT __declspec(dllimport)
