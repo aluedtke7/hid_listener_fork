@@ -28,6 +28,10 @@ set_target_properties(${PLUGIN_NAME} PROPERTIES OUTPUT_NAME "hid_listener")
 # Ensure position-independent code for dynamic linking
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Force -fPIC flag for C and C++
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+
 apply_standard_settings(${PLUGIN_NAME})
 
 # Symbols are hidden by default to reduce the chance of accidental conflicts
