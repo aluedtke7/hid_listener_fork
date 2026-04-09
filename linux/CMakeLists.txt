@@ -19,7 +19,7 @@ set_target_properties(${PLUGIN_NAME} PROPERTIES
 target_compile_options(${PLUGIN_NAME} PRIVATE -Wall -fPIC)
 target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 
-target_include_directories(${PLUGIN_NAME} PRIVATE
+target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
   "${CMAKE_CURRENT_SOURCE_DIR}/../shared"
   ${X11_INCLUDE_DIR})
