@@ -9,6 +9,7 @@ find_package(X11 REQUIRED)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/../shared")
 
 add_library(${PLUGIN_NAME} SHARED
+  "${CMAKE_CURRENT_SOURCE_DIR}/../shared/dart_api_dl.c"
   "hid_listener_plugin.cpp"
   "hid_listener_plugin_linux.cpp"
 )
@@ -26,6 +27,6 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../shared"
   ${X11_INCLUDE_DIR})
 
-target_link_libraries(${PLUGIN_NAME} PRIVATE flutter ${X11_LIBRARIES} ${X11_Xi_LIB})
+target_link_libraries(${PLUGIN_NAME} PRIVATE flutter ${X11_LIBRARIES} ${X11_Xi_LIB} -Wl,--unresolved-symbols=ignore-in-linkage)
 
 set(hid_listener_bundled_libraries "" PARENT_SCOPE)
