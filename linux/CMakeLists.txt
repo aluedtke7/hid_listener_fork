@@ -6,6 +6,9 @@ set(PLUGIN_NAME "hid_listener_plugin")
 
 find_package(X11 REQUIRED)
 
+# Get absolute path to shared folder
+get_filename_component(SHARED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../shared" ABSOLUTE)
+
 add_library(${PLUGIN_NAME} SHARED
   "hid_listener_plugin.cpp"
   "hid_listener_plugin_linux.cpp"
@@ -21,7 +24,7 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 
 target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../shared"
+  "${SHARED_DIR}"
   ${X11_INCLUDE_DIR})
 
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter ${X11_LIBRARIES} ${X11_Xi_LIB})
