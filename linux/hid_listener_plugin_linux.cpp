@@ -7,9 +7,6 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
-#include <dart-sdk/include/dart_native_api.h>
-#include <dart-sdk/include/dart_api_dl.h>
-
 #include <stdexcept>
 #include <string>
 
