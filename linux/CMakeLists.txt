@@ -6,6 +6,8 @@ set(PLUGIN_NAME "hid_listener_plugin")
 
 find_package(X11 REQUIRED)
 
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/../shared")
+
 add_library(${PLUGIN_NAME} SHARED
   "hid_listener_plugin.cpp"
   "hid_listener_plugin_linux.cpp"
