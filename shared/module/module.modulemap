@@ -1,5 +1,5 @@
 module HidListenerShared {
     header "../hid_listener_shared.h"
-    header "../dart-sdk/include/dart_api_dl.c"
+    header "../dart_api_dl.c"
     export *
 }
