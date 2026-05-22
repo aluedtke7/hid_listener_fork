@@ -14,7 +14,7 @@ A hid listening library for cross platform listening to keyboard/mouse events.
   s.author           = { 'localcc' => 'work@localcc.cc' }
 
   s.source           = { :path => '.' }
-  s.source_files     = 'Classes/**/*', '../shared/**/**.{c,h}'
+  s.source_files     = 'hid_listener/Sources/hid_listener/**/*.swift', '../shared/**/**.{c,h}'
   s.preserve_paths = '../shared/module/module.modulemap'
 
   s.xcconfig = { 
