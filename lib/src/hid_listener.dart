@@ -22,7 +22,12 @@ const String _libName = 'hid_listener';
 
 final ffi.DynamicLibrary _dylib = () {
   if (Platform.isMacOS || Platform.isIOS) {
-    return ffi.DynamicLibrary.open('$_libName.framework/$_libName');
+    // With Swift Package Manager the plugin is statically linked into the app
+    // binary — there is no separate hid_listener.framework to dlopen. The main
+    // executable's symbol table still resolves both statically linked symbols
+    // and anything in dynamically loaded frameworks, so this works for both
+    // SPM and CocoaPods consumers.
+    return ffi.DynamicLibrary.executable();
   }
   if (Platform.isAndroid || Platform.isLinux) {
     return ffi.DynamicLibrary.open('lib$_libName.so');
