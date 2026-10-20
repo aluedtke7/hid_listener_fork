@@ -154,7 +154,7 @@ public class HidListener {
 
     guard
       let keyboardEventTap = CGEvent.tapCreate(
-        tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
+        tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly,
         eventsOfInterest: CGEventMask(keyboardEventMask), callback: keyboardEventCallback, userInfo: nil
       )
     else {
@@ -163,7 +163,7 @@ public class HidListener {
 
     guard
       let mediaEventTap = CGEvent.tapCreate(
-        tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
+        tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly,
         eventsOfInterest: CGEventMask(1 << NX_SYSDEFINED), callback: mediaEventCallback, userInfo: nil
       )
     else {
@@ -178,7 +178,7 @@ public class HidListener {
 
     guard
       let mouseEventTap = CGEvent.tapCreate(
-        tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
+        tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly,
         eventsOfInterest: CGEventMask(mouseEventMask), callback: mouseEventCallback, userInfo: nil
       )
     else {
