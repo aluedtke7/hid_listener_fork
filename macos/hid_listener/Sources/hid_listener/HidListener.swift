@@ -35,10 +35,10 @@ func keyboardEventCallback(
         mediaEventType: MacOsMediaEventType.Play
       ))
 
-      let pointerEvent = UnsafeMutablePointer<MacOsKeyboardEvent>.allocate(capacity: 1)
-      pointerEvent.initialize(to: keyboardEvent.takeRetainedValue())
-
-      notifyDart(port: keyboardListenerPort, data: pointerEvent)
+      // The Dart side takes over the retained reference.
+      if !notifyDart(port: keyboardListenerPort, data: keyboardEvent.toOpaque()) {
+        keyboardEvent.release()
+      }
     }
   }
 
@@ -86,10 +86,10 @@ func mediaEventCallback(
         mediaEventType: mediaEventType!
       ))
 
-      let pointerEvent = UnsafeMutablePointer<MacOsKeyboardEvent>.allocate(capacity: 1)
-      pointerEvent.initialize(to: keyboardEvent.takeRetainedValue())
-
-      notifyDart(port: keyboardListenerPort, data: pointerEvent)
+      // The Dart side takes over the retained reference.
+      if !notifyDart(port: keyboardListenerPort, data: keyboardEvent.toOpaque()) {
+        keyboardEvent.release()
+      }
     }
   }
 
@@ -99,8 +99,13 @@ func mediaEventCallback(
 func mouseEventCallback(
   proxy _: CGEventTapProxy, type: CGEventType, event: CGEvent, _: UnsafeMutableRawPointer?
 ) -> Unmanaged<CGEvent>? {
+  if mouseListenerPort == 0 {
+    return Unmanaged.passUnretained(event)
+  }
+
   let mouseLoc = NSEvent.mouseLocation
-  let mouseEvent = UnsafeMutablePointer<MouseEvent>.allocate(capacity: 1)
+  // Allocated with malloc, because the Dart side frees it with free().
+  let mouseEvent = malloc(MemoryLayout<MouseEvent>.size)!.bindMemory(to: MouseEvent.self, capacity: 1)
 
   mouseEvent.pointee.x = mouseLoc.x
   mouseEvent.pointee.y = mouseLoc.y
@@ -128,7 +133,9 @@ func mouseEventCallback(
     }
   }
 
-  notifyDart(port: mouseListenerPort, data: mouseEvent)
+  if !notifyDart(port: mouseListenerPort, data: mouseEvent) {
+    free(mouseEvent)
+  }
 
   return Unmanaged.passUnretained(event)
 }
@@ -213,16 +220,17 @@ public class HidListener {
 var keyboardListenerPort: Dart_Port = 0
 var mouseListenerPort: Dart_Port = 0
 
-func notifyDart(port: Dart_Port, data: UnsafeMutableRawPointer) {
+/// Returns false if the event did not reach Dart, so the caller still owns [data].
+func notifyDart(port: Dart_Port, data: UnsafeMutableRawPointer) -> Bool {
   if port == 0 {
-    return
+    return false
   }
 
   var cObject = Dart_CObject()
   cObject.type = Dart_CObject_kInt64
   cObject.value.as_int64 = Int64(UInt(bitPattern: data))
 
-  _ = Dart_PostCObject_DL(port, &cObject)
+  return Dart_PostCObject_DL(port, &cObject)
 }
 
 func Internal_SetKeyboardListener(port: Dart_Port) -> Bool {

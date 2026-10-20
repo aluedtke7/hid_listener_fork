@@ -1,6 +1,7 @@
 import 'dart:ffi' as ffi;
 import 'dart:isolate';
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/services.dart';
 import 'package:hid_listener/src/hid_listener.dart';
 import 'package:hid_listener/src/shared/hid_listener_shared.dart' as shared;
@@ -45,10 +46,10 @@ class MacOsHidListenerBackend extends HidListenerBackend {
   }
 
   void _keyboardProc(dynamic e) {
-    final eventAddr =
-        ffi.Pointer<ffi.Pointer<bindings.ObjCObject>>.fromAddress(e);
-    final event =
-        bindings.MacOsKeyboardEvent.castFromPointer(_bindings, eventAddr.value);
+    // The native side hands over a retained reference, released by the wrapper.
+    final event = bindings.MacOsKeyboardEvent.castFromPointer(
+        _bindings, ffi.Pointer<bindings.ObjCObject>.fromAddress(e),
+        release: true);
 
     // Get RawKeyEventData to extract physical and logical keys
     final RawKeyEventData eventData;
@@ -144,6 +145,8 @@ class MacOsHidListenerBackend extends HidListenerBackend {
 
   void _mouseProc(dynamic e) {
     final event = shared.mouseProc(e);
+    // Allocated with malloc on the native side.
+    malloc.free(ffi.Pointer<ffi.Void>.fromAddress(e));
     if (event == null) return;
 
     for (final listener in mouseListeners.values) {
