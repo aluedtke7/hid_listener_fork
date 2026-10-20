@@ -6,20 +6,26 @@
 #include <dart-sdk/include/dart_api_dl.h>
 #include <dart-sdk/include/dart_api_dl.c>
 
+#include <objbase.h>
+
 #include <functional>
 #include "hid_listener_plugin.h"
 
 static Dart_Port keyboardListenerPort = 0;
 static Dart_Port mouseListenerPort = 0;
 
-void NotifyDart(Dart_Port port, const void* work) {
+// Hands [work] over to Dart, which frees it with CoTaskMemFree (package:ffi's malloc.free).
+// Frees it here if it does not reach Dart.
+void NotifyDart(Dart_Port port, void* work) {
 	const intptr_t workAddr = reinterpret_cast<intptr_t>(work);
 
 	Dart_CObject cObject;
 	cObject.type = Dart_CObject_kInt64;
 	cObject.value.as_int64 = workAddr;
 
-	Dart_PostCObject_DL(port, &cObject);
+	if (!Dart_PostCObject_DL(port, &cObject)) {
+		CoTaskMemFree(work);
+	}
 }
 
 static LRESULT KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -33,7 +39,8 @@ static LRESULT KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	KBDLLHOOKSTRUCT* info = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
 
-	WindowsKeyboardEvent* keyboardEvent = new WindowsKeyboardEvent;
+	WindowsKeyboardEvent* keyboardEvent = static_cast<WindowsKeyboardEvent*>(CoTaskMemAlloc(sizeof(WindowsKeyboardEvent)));
+	if (keyboardEvent == nullptr) return CallNextHookEx(NULL, nCode, wParam, lParam);
 	keyboardEvent->eventType = eventType;
 	keyboardEvent->vkCode = info->vkCode; 
 	keyboardEvent->scanCode = info->scanCode;
@@ -67,7 +74,8 @@ static LRESULT MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	MSLLHOOKSTRUCT* info = reinterpret_cast<MSLLHOOKSTRUCT*>(lParam);
 
-	MouseEvent *mouseEvent = new MouseEvent;
+	MouseEvent *mouseEvent = static_cast<MouseEvent*>(CoTaskMemAlloc(sizeof(MouseEvent)));
+	if (mouseEvent == nullptr) return CallNextHookEx(NULL, nCode, wParam, lParam);
 	mouseEvent->eventType = eventType;
 	mouseEvent->x = (double)info->pt.x;
 	mouseEvent->y = (double)info->pt.y;

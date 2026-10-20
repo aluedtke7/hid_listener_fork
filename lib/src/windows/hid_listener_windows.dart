@@ -1,6 +1,7 @@
 import 'dart:ffi' as ffi;
 import 'dart:isolate';
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/services.dart';
 import 'package:hid_listener/src/hid_listener.dart';
 import 'package:hid_listener/src/shared/hid_listener_shared.dart' as shared;
@@ -39,8 +40,11 @@ class WindowsHidListenerBackend extends HidListenerBackend {
         ffi.Pointer<bindings.WindowsKeyboardEvent>.fromAddress(event);
 
     final vkCode = eventAddr.ref.vkCode;
+    final scanCode = eventAddr.ref.scanCode;
     final isDown =
         eventAddr.ref.eventType == bindings.WindowsKeyboardEventType.WKE_KeyDown;
+    // Allocated with CoTaskMemAlloc on the native side.
+    malloc.free(eventAddr);
     final pressed = isDown ? 0xffffffff : 0x0;
 
     // Use RawKeyEventDataWindows to get physical and logical keys
@@ -68,7 +72,7 @@ class WindowsHidListenerBackend extends HidListenerBackend {
 
     final eventData = RawKeyEventDataWindows(
         keyCode: vkCode,
-        scanCode: eventAddr.ref.scanCode,
+        scanCode: scanCode,
         modifiers: modifiers);
 
     final physicalKey = eventData.physicalKey;
@@ -115,6 +119,8 @@ class WindowsHidListenerBackend extends HidListenerBackend {
 
   void _mouseProc(dynamic e) {
     final event = shared.mouseProc(e);
+    // Allocated with CoTaskMemAlloc on the native side.
+    malloc.free(ffi.Pointer<ffi.Void>.fromAddress(e));
     if (event == null) return;
 
     for (final listener in mouseListeners.values) {
