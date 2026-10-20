@@ -42,7 +42,7 @@ func keyboardEventCallback(
     }
   }
 
-  return Unmanaged.passRetained(event)
+  return Unmanaged.passUnretained(event)
 }
 
 func mediaEventCallback(
@@ -93,7 +93,7 @@ func mediaEventCallback(
     }
   }
 
-  return Unmanaged.passRetained(event)
+  return Unmanaged.passUnretained(event)
 }
 
 func mouseEventCallback(
@@ -130,7 +130,7 @@ func mouseEventCallback(
 
   notifyDart(port: mouseListenerPort, data: mouseEvent)
 
-  return Unmanaged.passRetained(event)
+  return Unmanaged.passUnretained(event)
 }
 
 public class HidListener {
